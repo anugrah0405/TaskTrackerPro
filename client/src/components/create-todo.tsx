@@ -28,6 +28,9 @@ export default function CreateTodo() {
     },
   });
 
+  // Watch the labels field for changes
+  const labels = form.watch("labels") || [];
+
   const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
@@ -56,16 +59,14 @@ export default function CreateTodo() {
 
   const addLabel = () => {
     if (!currentLabel) return;
-    const currentLabels = form.getValues("labels") || [];
-    form.setValue("labels", [...currentLabels, currentLabel]);
+    form.setValue("labels", [...labels, currentLabel]);
     setCurrentLabel("");
   };
 
   const removeLabel = (label: string) => {
-    const currentLabels = form.getValues("labels") || [];
     form.setValue(
       "labels",
-      currentLabels.filter((l) => l !== label)
+      labels.filter((l) => l !== label)
     );
   };
 
@@ -130,9 +131,9 @@ export default function CreateTodo() {
                 Add
               </Button>
             </div>
-            {form.getValues("labels")?.length > 0 && (
+            {labels.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {form.getValues("labels")?.map((label) => (
+                {labels.map((label) => (
                   <div
                     key={label}
                     className="flex items-center space-x-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md"

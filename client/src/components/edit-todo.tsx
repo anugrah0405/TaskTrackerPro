@@ -35,6 +35,9 @@ export default function EditTodo({ todo, onClose }: EditTodoProps) {
     },
   });
 
+  // Watch the labels field for changes
+  const labels = form.watch("labels") || [];
+
   const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
@@ -67,16 +70,14 @@ export default function EditTodo({ todo, onClose }: EditTodoProps) {
 
   const addLabel = () => {
     if (!currentLabel) return;
-    const currentLabels = form.getValues("labels") || [];
-    form.setValue("labels", [...currentLabels, currentLabel]);
+    form.setValue("labels", [...labels, currentLabel]);
     setCurrentLabel("");
   };
 
   const removeLabel = (label: string) => {
-    const currentLabels = form.getValues("labels") || [];
     form.setValue(
       "labels",
-      currentLabels.filter((l) => l !== label)
+      labels.filter((l) => l !== label)
     );
   };
 
@@ -140,9 +141,9 @@ export default function EditTodo({ todo, onClose }: EditTodoProps) {
             Add
           </Button>
         </div>
-        {form.getValues("labels")?.length > 0 && (
+        {labels.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {form.getValues("labels")?.map((label) => (
+            {labels.map((label) => (
               <div
                 key={label}
                 className="flex items-center space-x-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md"
@@ -162,18 +163,18 @@ export default function EditTodo({ todo, onClose }: EditTodoProps) {
       </div>
 
       <div className="space-y-2">
-            <Label htmlFor="deadline">Deadline (optional)</Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Set the date and time for your task (HH:MM format)
-            </p>
-            <Input
-              id="deadline"
-              type="datetime-local"
-              step="60"
-              {...form.register("deadline")}
-              className="px-3 py-2"
-            />
-          </div>
+        <Label htmlFor="deadline">Deadline (optional)</Label>
+        <p className="text-sm text-muted-foreground mb-2">
+          Set the date and time for your task (HH:MM format)
+        </p>
+        <Input
+          id="deadline"
+          type="datetime-local"
+          step="60"
+          {...form.register("deadline")}
+          className="px-3 py-2"
+        />
+      </div>
 
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onClose}>
