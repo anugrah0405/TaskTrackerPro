@@ -23,6 +23,7 @@ export const todos = pgTable("todos", {
   completed: boolean("completed").notNull().default(false),
   deadline: timestamp("deadline"),
   labels: text("labels").array(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({

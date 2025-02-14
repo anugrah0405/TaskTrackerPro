@@ -108,6 +108,11 @@ export default function TodoList() {
               ? a.title.localeCompare(b.title)
               : b.title.localeCompare(a.title);
 
+          case "created":
+            return filters.sortDirection === "asc"
+              ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+
           default:
             return 0;
         }
