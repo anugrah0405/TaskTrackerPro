@@ -7,9 +7,13 @@ import { Loader2, Trash2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import TodoFilters, { TodoFilters as FilterType } from "./todo-filters";
+import { useState, useMemo } from "react";
 
 export default function TodoList() {
   const { toast } = useToast();
+  const [filters, setFilters] = useState<FilterType>({});
+
   const { data: todos, isLoading } = useQuery<Todo[]>({
     queryKey: ["/api/todos"],
   });
@@ -55,6 +59,61 @@ export default function TodoList() {
     },
   });
 
+  // Get all unique labels from todos
+  const availableLabels = useMemo(() => {
+    if (!todos) return [];
+    const labels = new Set<string>();
+    todos.forEach((todo) => {
+      todo.labels?.forEach((label) => labels.add(label));
+    });
+    return Array.from(labels).sort();
+  }, [todos]);
+
+  // Filter and sort todos
+  const filteredTodos = useMemo(() => {
+    if (!todos) return [];
+
+    return todos
+      .filter((todo) => {
+        // Filter by category
+        if (filters.category !== undefined && todo.categoryId !== filters.category) {
+          return false;
+        }
+
+        // Filter by completion status
+        if (filters.completed !== undefined && todo.completed !== filters.completed) {
+          return false;
+        }
+
+        // Filter by label
+        if (filters.label && (!todo.labels || !todo.labels.includes(filters.label))) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (!filters.sortBy) return 0;
+
+        switch (filters.sortBy) {
+          case "deadline":
+            if (!a.deadline) return 1;
+            if (!b.deadline) return -1;
+            return filters.sortDirection === "asc"
+              ? new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+              : new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
+
+          case "title":
+            return filters.sortDirection === "asc"
+              ? a.title.localeCompare(b.title)
+              : b.title.localeCompare(a.title);
+
+          default:
+            return 0;
+        }
+      });
+  }, [todos, filters]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center">
@@ -77,73 +136,90 @@ export default function TodoList() {
 
   return (
     <div className="space-y-4">
-      {todos.map((todo) => {
-        const category = categories?.find((c) => c.id === todo.categoryId);
+      <TodoFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        categories={categories}
+        availableLabels={availableLabels}
+      />
 
-        return (
-          <Card key={todo.id}>
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start space-x-4">
-                  <Checkbox
-                    checked={todo.completed}
-                    onCheckedChange={(checked) =>
-                      updateTodoMutation.mutate({
-                        id: todo.id,
-                        completed: checked as boolean,
-                      })
-                    }
-                    className="mt-1"
-                  />
-                  <div className="space-y-1">
-                    <p
-                      className={`font-medium ${
-                        todo.completed ? "line-through text-muted-foreground" : ""
-                      }`}
-                    >
-                      {todo.title}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {category && (
-                        <div
-                          className="px-2 py-1 rounded text-xs"
-                          style={{
-                            backgroundColor: category.color,
-                            color: "white",
-                          }}
-                        >
-                          {category.name}
-                        </div>
-                      )}
-                      {todo.labels?.map((label) => (
-                        <div
-                          key={label}
-                          className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs"
-                        >
-                          {label}
-                        </div>
-                      ))}
-                    </div>
-                    {todo.deadline && (
-                      <p className="text-sm text-muted-foreground">
-                        Due: {format(new Date(todo.deadline), "PPp")}
+      {filteredTodos.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">
+              No todos match your filters.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        filteredTodos.map((todo) => {
+          const category = categories?.find((c) => c.id === todo.categoryId);
+
+          return (
+            <Card key={todo.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4">
+                    <Checkbox
+                      checked={todo.completed}
+                      onCheckedChange={(checked) =>
+                        updateTodoMutation.mutate({
+                          id: todo.id,
+                          completed: checked as boolean,
+                        })
+                      }
+                      className="mt-1"
+                    />
+                    <div className="space-y-1">
+                      <p
+                        className={`font-medium ${
+                          todo.completed ? "line-through text-muted-foreground" : ""
+                        }`}
+                      >
+                        {todo.title}
                       </p>
-                    )}
+                      <div className="flex flex-wrap gap-2">
+                        {category && (
+                          <div
+                            className="px-2 py-1 rounded text-xs"
+                            style={{
+                              backgroundColor: category.color,
+                              color: "white",
+                            }}
+                          >
+                            {category.name}
+                          </div>
+                        )}
+                        {todo.labels?.map((label) => (
+                          <div
+                            key={label}
+                            className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs"
+                          >
+                            {label}
+                          </div>
+                        ))}
+                      </div>
+                      {todo.deadline && (
+                        <p className="text-sm text-muted-foreground">
+                          Due: {format(new Date(todo.deadline), "PPp")}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteTodoMutation.mutate(todo.id)}
+                    disabled={deleteTodoMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteTodoMutation.mutate(todo.id)}
-                  disabled={deleteTodoMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+              </CardContent>
+            </Card>
+          );
+        })
+      )}
     </div>
   );
 }
