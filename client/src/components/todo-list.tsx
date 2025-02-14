@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Todo } from "@shared/schema";
+import { Todo, Category } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,10 @@ export default function TodoList() {
   const { toast } = useToast();
   const { data: todos, isLoading } = useQuery<Todo[]>({
     queryKey: ["/api/todos"],
+  });
+
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
   });
 
   const updateTodoMutation = useMutation({
@@ -73,47 +77,73 @@ export default function TodoList() {
 
   return (
     <div className="space-y-4">
-      {todos.map((todo) => (
-        <Card key={todo.id}>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Checkbox
-                  checked={todo.completed}
-                  onCheckedChange={(checked) =>
-                    updateTodoMutation.mutate({
-                      id: todo.id,
-                      completed: checked as boolean,
-                    })
-                  }
-                />
-                <div>
-                  <p
-                    className={`font-medium ${
-                      todo.completed ? "line-through text-muted-foreground" : ""
-                    }`}
-                  >
-                    {todo.title}
-                  </p>
-                  {todo.deadline && (
-                    <p className="text-sm text-muted-foreground">
-                      Due: {format(new Date(todo.deadline), "PPp")}
+      {todos.map((todo) => {
+        const category = categories?.find((c) => c.id === todo.categoryId);
+
+        return (
+          <Card key={todo.id}>
+            <CardContent className="pt-6">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-4">
+                  <Checkbox
+                    checked={todo.completed}
+                    onCheckedChange={(checked) =>
+                      updateTodoMutation.mutate({
+                        id: todo.id,
+                        completed: checked as boolean,
+                      })
+                    }
+                    className="mt-1"
+                  />
+                  <div className="space-y-1">
+                    <p
+                      className={`font-medium ${
+                        todo.completed ? "line-through text-muted-foreground" : ""
+                      }`}
+                    >
+                      {todo.title}
                     </p>
-                  )}
+                    <div className="flex flex-wrap gap-2">
+                      {category && (
+                        <div
+                          className="px-2 py-1 rounded text-xs"
+                          style={{
+                            backgroundColor: category.color,
+                            color: "white",
+                          }}
+                        >
+                          {category.name}
+                        </div>
+                      )}
+                      {todo.labels?.map((label) => (
+                        <div
+                          key={label}
+                          className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs"
+                        >
+                          {label}
+                        </div>
+                      ))}
+                    </div>
+                    {todo.deadline && (
+                      <p className="text-sm text-muted-foreground">
+                        Due: {format(new Date(todo.deadline), "PPp")}
+                      </p>
+                    )}
+                  </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => deleteTodoMutation.mutate(todo.id)}
+                  disabled={deleteTodoMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => deleteTodoMutation.mutate(todo.id)}
-                disabled={deleteTodoMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

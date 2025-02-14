@@ -1,4 +1,4 @@
-import { users, todos, type User, type InsertUser, type Todo, type InsertTodo } from "@shared/schema";
+import { users, todos, categories, type User, type InsertUser, type Todo, type InsertTodo, type Category, type InsertCategory } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
@@ -11,6 +11,10 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+
+  getCategories(userId: number): Promise<Category[]>;
+  createCategory(userId: number, category: InsertCategory): Promise<Category>;
+  deleteCategory(id: number): Promise<void>;
 
   getTodos(userId: number): Promise<Todo[]>;
   createTodo(userId: number, todo: InsertTodo): Promise<Todo>;
@@ -46,6 +50,22 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async getCategories(userId: number): Promise<Category[]> {
+    return db.select().from(categories).where(eq(categories.userId, userId));
+  }
+
+  async createCategory(userId: number, category: InsertCategory): Promise<Category> {
+    const [newCategory] = await db
+      .insert(categories)
+      .values({ ...category, userId })
+      .returning();
+    return newCategory;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    await db.delete(categories).where(eq(categories.id, id));
   }
 
   async getTodos(userId: number): Promise<Todo[]> {
