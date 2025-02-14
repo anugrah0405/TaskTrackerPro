@@ -153,10 +153,15 @@ export default function CreateTodo() {
 
           <div className="space-y-2">
             <Label htmlFor="deadline">Deadline (optional)</Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Set the date and time for your task (HH:MM format)
+            </p>
             <Input
               id="deadline"
               type="datetime-local"
+              step="60"
               {...form.register("deadline")}
+              className="px-3 py-2"
             />
           </div>
 
