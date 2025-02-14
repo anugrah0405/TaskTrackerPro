@@ -96,22 +96,25 @@ export default function TodoList() {
         if (!filters.sortBy) return 0;
 
         switch (filters.sortBy) {
-          case "deadline":
-            if (!a.deadline) return 1;
-            if (!b.deadline) return -1;
+          case "created":
+            // Ensure both items have createdAt before comparing
+            const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             return filters.sortDirection === "asc"
-              ? new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-              : new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
+              ? aTime - bTime
+              : bTime - aTime;
 
           case "title":
             return filters.sortDirection === "asc"
               ? a.title.localeCompare(b.title)
               : b.title.localeCompare(a.title);
 
-          case "created":
+          case "deadline":
+            if (!a.deadline) return 1;
+            if (!b.deadline) return -1;
             return filters.sortDirection === "asc"
-              ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-              : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+              ? new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+              : new Date(b.deadline).getTime() - new Date(a.deadline).getTime();
 
           default:
             return 0;
