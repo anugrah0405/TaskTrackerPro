@@ -13,7 +13,7 @@ export type TodoFilters = {
   category?: number;
   completed?: boolean;
   label?: string;
-  sortBy?: "deadline" | "title" | "created";
+  sortBy?: "deadline" | "title" | "created"; //reverted this line to original
   sortDirection?: "asc" | "desc";
 };
 
@@ -38,11 +38,11 @@ export default function TodoFilters({
     <div className="flex flex-wrap gap-4 items-center mb-6">
       {/* Category filter */}
       <Select
-        value={filters.category?.toString()}
+        value={filters.category ? filters.category.toString() : "all"}
         onValueChange={(value) =>
           onFiltersChange({
             ...filters,
-            category: value ? parseInt(value) : undefined,
+            category: value === "all" ? undefined : parseInt(value),
           })
         }
       >
@@ -50,7 +50,7 @@ export default function TodoFilters({
           <SelectValue placeholder="Filter by category" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All categories</SelectItem>
+          <SelectItem value="all">All categories</SelectItem>
           {categories?.map((category) => (
             <SelectItem key={category.id} value={category.id.toString()}>
               <div className="flex items-center space-x-2">
@@ -67,12 +67,12 @@ export default function TodoFilters({
 
       {/* Status filter */}
       <Select
-        value={filters.completed?.toString()}
+        value={filters.completed !== undefined ? filters.completed.toString() : "all"}
         onValueChange={(value) =>
           onFiltersChange({
             ...filters,
             completed:
-              value === "true" ? true : value === "false" ? false : undefined,
+              value === "all" ? undefined : value === "true",
           })
         }
       >
@@ -80,7 +80,7 @@ export default function TodoFilters({
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All tasks</SelectItem>
+          <SelectItem value="all">All tasks</SelectItem>
           <SelectItem value="false">
             <span className="flex items-center gap-2">
               Pending
@@ -97,11 +97,11 @@ export default function TodoFilters({
 
       {/* Label filter */}
       <Select
-        value={filters.label || ""}
+        value={filters.label || "all"}
         onValueChange={(value) =>
           onFiltersChange({
             ...filters,
-            label: value || undefined,
+            label: value === "all" ? undefined : value,
           })
         }
       >
@@ -109,7 +109,7 @@ export default function TodoFilters({
           <SelectValue placeholder="Filter by label" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All labels</SelectItem>
+          <SelectItem value="all">All labels</SelectItem>
           {availableLabels?.map((label) => (
             <SelectItem key={label} value={label}>
               {label}
@@ -123,29 +123,39 @@ export default function TodoFilters({
         value={
           filters.sortBy
             ? `${filters.sortBy}-${filters.sortDirection || "asc"}`
-            : ""
+            : "default"
         }
         onValueChange={(value) => {
-          const [sortBy, sortDirection] = value.split("-") as [
-            TodoFilters["sortBy"],
-            TodoFilters["sortDirection"]
-          ];
-          onFiltersChange({
-            ...filters,
-            sortBy: sortBy || undefined,
-            sortDirection: sortDirection || undefined,
-          });
+          if (value === "default") {
+            onFiltersChange({
+              ...filters,
+              sortBy: undefined,
+              sortDirection: undefined,
+            });
+          } else {
+            const [sortBy, sortDirection] = value.split("-") as [
+              TodoFilters["sortBy"],
+              TodoFilters["sortDirection"]
+            ];
+            onFiltersChange({
+              ...filters,
+              sortBy,
+              sortDirection,
+            });
+          }
         }}
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Sort by" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Default</SelectItem>
+          <SelectItem value="default">Default</SelectItem>
           <SelectItem value="deadline-asc">Deadline (earliest first)</SelectItem>
           <SelectItem value="deadline-desc">Deadline (latest first)</SelectItem>
           <SelectItem value="title-asc">Title (A-Z)</SelectItem>
           <SelectItem value="title-desc">Title (Z-A)</SelectItem>
+          <SelectItem value="created-asc">Created (oldest first)</SelectItem>
+          <SelectItem value="created-desc">Created (newest first)</SelectItem>
         </SelectContent>
       </Select>
 
