@@ -51,6 +51,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(todo);
   });
 
+  app.patch("/api/todos/:id/details", async (req, res) => {
+    if (!req.user) return res.sendStatus(401);
+
+    const parseResult = insertTodoSchema.partial().safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json(parseResult.error);
+    }
+
+    const todo = await storage.updateTodoDetails(
+      parseInt(req.params.id),
+      parseResult.data
+    );
+    res.json(todo);
+  });
+
   app.patch("/api/todos/:id", async (req, res) => {
     if (!req.user) return res.sendStatus(401);
     const todo = await storage.updateTodo(

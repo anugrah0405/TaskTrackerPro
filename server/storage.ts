@@ -19,6 +19,7 @@ export interface IStorage {
   getTodos(userId: number): Promise<Todo[]>;
   createTodo(userId: number, todo: InsertTodo): Promise<Todo>;
   updateTodo(id: number, completed: boolean): Promise<Todo>;
+  updateTodoDetails(id: number, todo: Partial<InsertTodo>): Promise<Todo>;
   deleteTodo(id: number): Promise<void>;
 
   sessionStore: session.Store;
@@ -93,6 +94,19 @@ export class DatabaseStorage implements IStorage {
       .returning();
     if (!todo) throw new Error("Todo not found");
     return todo;
+  }
+
+  async updateTodoDetails(id: number, todo: Partial<InsertTodo>): Promise<Todo> {
+    const [updatedTodo] = await db
+      .update(todos)
+      .set({
+        ...todo,
+        deadline: todo.deadline ? new Date(todo.deadline) : undefined,
+      })
+      .where(eq(todos.id, id))
+      .returning();
+    if (!updatedTodo) throw new Error("Todo not found");
+    return updatedTodo;
   }
 
   async deleteTodo(id: number): Promise<void> {

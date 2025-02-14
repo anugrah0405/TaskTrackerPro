@@ -3,16 +3,19 @@ import { Todo, Category } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, Pencil } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import TodoFilters, { TodoFilters as FilterType } from "./todo-filters";
 import { useState, useMemo } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import EditTodo from "./edit-todo";
 
 export default function TodoList() {
   const { toast } = useToast();
   const [filters, setFilters] = useState<FilterType>({});
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
   const { data: todos, isLoading } = useQuery<Todo[]>({
     queryKey: ["/api/todos"],
@@ -214,20 +217,42 @@ export default function TodoList() {
                       )}
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteTodoMutation.mutate(todo.id)}
-                    disabled={deleteTodoMutation.isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingTodo(todo)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteTodoMutation.mutate(todo.id)}
+                      disabled={deleteTodoMutation.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           );
         })
       )}
+      <Dialog open={editingTodo !== null} onOpenChange={() => setEditingTodo(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Todo</DialogTitle>
+          </DialogHeader>
+          {editingTodo && (
+            <EditTodo
+              todo={editingTodo}
+              onClose={() => setEditingTodo(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
