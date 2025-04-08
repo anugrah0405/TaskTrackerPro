@@ -88,7 +88,7 @@ export default function TodoFilters({
           </SelectItem>
           <SelectItem value="true">
             <span className="flex items-center gap-2">
-              <Check className="w-4 h-4" />
+              {filters.completed === true && <Check className="w-4 h-4" />}
               Completed
             </span>
           </SelectItem>
