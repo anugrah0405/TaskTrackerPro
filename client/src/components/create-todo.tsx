@@ -68,6 +68,8 @@ export default function CreateTodo() {
       "labels",
       labels.filter((l) => l !== label)
     );
+    // Force re-render when a label is removed
+    form.trigger("labels");
   };
 
   return (
@@ -154,15 +156,19 @@ export default function CreateTodo() {
 
           <div className="space-y-2">
             <Label htmlFor="deadline">Deadline (optional)</Label>
-            <p className="text-sm text-muted-foreground mb-2">
-              Set the date and time for your task (HH:MM format)
-            </p>
+            <div className="flex items-center mb-2">
+              <p className="text-sm text-muted-foreground mr-2">
+                Set the date and time for your task
+              </p>
+              <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded">HH:MM format</span>
+            </div>
             <Input
               id="deadline"
               type="datetime-local"
               step="60"
               {...form.register("deadline")}
               className="px-3 py-2"
+              placeholder="YYYY-MM-DD HH:MM"
             />
           </div>
 
