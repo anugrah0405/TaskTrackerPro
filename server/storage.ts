@@ -14,13 +14,13 @@ export interface IStorage {
 
   getCategories(userId: number): Promise<Category[]>;
   createCategory(userId: number, category: InsertCategory): Promise<Category>;
-  deleteCategory(id: number): Promise<void>;
+  deleteCategory(id: number, userId: number): Promise<void>;
 
   getTodos(userId: number): Promise<Todo[]>;
   createTodo(userId: number, todo: InsertTodo): Promise<Todo>;
-  updateTodo(id: number, completed: boolean): Promise<Todo>;
-  updateTodoDetails(id: number, todo: Partial<InsertTodo>): Promise<Todo>;
-  deleteTodo(id: number): Promise<void>;
+  updateTodo(id: number, userId: number, completed: boolean): Promise<Todo>;
+  updateTodoDetails(id: number, userId: number, todo: Partial<InsertTodo>): Promise<Todo>;
+  deleteTodo(id: number, userId: number): Promise<void>;
 
   sessionStore: session.Store;
 }
@@ -65,8 +65,10 @@ export class DatabaseStorage implements IStorage {
     return newCategory;
   }
 
-  async deleteCategory(id: number): Promise<void> {
-    await db.delete(categories).where(eq(categories.id, id));
+  async deleteCategory(id: number, userId: number): Promise<void> {
+    await db.delete(categories)
+      .where(eq(categories.id, id))
+      .where(eq(categories.userId, userId));
   }
 
   async getTodos(userId: number): Promise<Todo[]> {
@@ -86,17 +88,18 @@ export class DatabaseStorage implements IStorage {
     return newTodo;
   }
 
-  async updateTodo(id: number, completed: boolean): Promise<Todo> {
+  async updateTodo(id: number, userId: number, completed: boolean): Promise<Todo> {
     const [todo] = await db
       .update(todos)
       .set({ completed })
       .where(eq(todos.id, id))
+      .where(eq(todos.userId, userId))
       .returning();
-    if (!todo) throw new Error("Todo not found");
+    if (!todo) throw new Error("Todo not found or unauthorized");
     return todo;
   }
 
-  async updateTodoDetails(id: number, todo: Partial<InsertTodo>): Promise<Todo> {
+  async updateTodoDetails(id: number, userId: number, todo: Partial<InsertTodo>): Promise<Todo> {
     const [updatedTodo] = await db
       .update(todos)
       .set({
@@ -104,13 +107,16 @@ export class DatabaseStorage implements IStorage {
         deadline: todo.deadline ? new Date(todo.deadline) : undefined,
       })
       .where(eq(todos.id, id))
+      .where(eq(todos.userId, userId))
       .returning();
-    if (!updatedTodo) throw new Error("Todo not found");
+    if (!updatedTodo) throw new Error("Todo not found or unauthorized");
     return updatedTodo;
   }
 
-  async deleteTodo(id: number): Promise<void> {
-    await db.delete(todos).where(eq(todos.id, id));
+  async deleteTodo(id: number, userId: number): Promise<void> {
+    await db.delete(todos)
+      .where(eq(todos.id, id))
+      .where(eq(todos.userId, userId));
   }
 }
 

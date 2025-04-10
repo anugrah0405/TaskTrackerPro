@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/categories/:id", async (req, res) => {
     if (!req.user) return res.sendStatus(401);
-    await storage.deleteCategory(parseInt(req.params.id));
+    await storage.deleteCategory(parseInt(req.params.id), req.user.id);
     res.sendStatus(204);
   });
 
@@ -61,6 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const todo = await storage.updateTodoDetails(
       parseInt(req.params.id),
+      req.user.id,
       parseResult.data
     );
     res.json(todo);
