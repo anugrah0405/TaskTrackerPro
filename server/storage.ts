@@ -128,8 +128,10 @@ export class DatabaseStorage implements IStorage {
   async deleteTodo(id: number, userId: number): Promise<void> {
     await db.delete(todos)
       .where(
-        eq(todos.id, id) && 
-        eq(todos.userId, userId)
+        and(
+          eq(todos.id, id),
+          eq(todos.userId, userId)
+        )
       );
   }
 }
