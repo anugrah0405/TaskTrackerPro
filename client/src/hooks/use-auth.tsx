@@ -37,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Clear all existing queries to avoid showing previous user's data
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], user);
     },
     onError: (error: Error) => {
@@ -54,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
+      // Clear all existing queries to avoid showing previous user's data
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], user);
     },
     onError: (error: Error) => {
@@ -70,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Clear all existing queries to avoid showing previous user's data
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], null);
     },
     onError: (error: Error) => {
