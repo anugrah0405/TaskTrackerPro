@@ -1,6 +1,6 @@
 import { users, todos, categories, type User, type InsertUser, type Todo, type InsertTodo, type Category, type InsertCategory } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -67,8 +67,12 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCategory(id: number, userId: number): Promise<void> {
     await db.delete(categories)
-      .where(eq(categories.id, id))
-      .where(eq(categories.userId, userId));
+      .where(
+        and(
+          eq(categories.id, id),
+          eq(categories.userId, userId)
+        )
+      );
   }
 
   async getTodos(userId: number): Promise<Todo[]> {
@@ -92,8 +96,12 @@ export class DatabaseStorage implements IStorage {
     const [todo] = await db
       .update(todos)
       .set({ completed })
-      .where(eq(todos.id, id))
-      .where(eq(todos.userId, userId))
+      .where(
+        and(
+          eq(todos.id, id),
+          eq(todos.userId, userId)
+        )
+      )
       .returning();
     if (!todo) throw new Error("Todo not found or unauthorized");
     return todo;
@@ -106,8 +114,12 @@ export class DatabaseStorage implements IStorage {
         ...todo,
         deadline: todo.deadline ? new Date(todo.deadline) : undefined,
       })
-      .where(eq(todos.id, id))
-      .where(eq(todos.userId, userId))
+      .where(
+        and(
+          eq(todos.id, id),
+          eq(todos.userId, userId)
+        )
+      )
       .returning();
     if (!updatedTodo) throw new Error("Todo not found or unauthorized");
     return updatedTodo;
@@ -115,8 +127,10 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTodo(id: number, userId: number): Promise<void> {
     await db.delete(todos)
-      .where(eq(todos.id, id))
-      .where(eq(todos.userId, userId));
+      .where(
+        eq(todos.id, id) && 
+        eq(todos.userId, userId)
+      );
   }
 }
 

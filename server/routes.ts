@@ -71,6 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.user) return res.sendStatus(401);
     const todo = await storage.updateTodo(
       parseInt(req.params.id),
+      req.user.id,
       req.body.completed
     );
     res.json(todo);
@@ -78,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/todos/:id", async (req, res) => {
     if (!req.user) return res.sendStatus(401);
-    await storage.deleteTodo(parseInt(req.params.id));
+    await storage.deleteTodo(parseInt(req.params.id), req.user.id);
     res.sendStatus(204);
   });
 
