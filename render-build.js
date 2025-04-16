@@ -1,4 +1,4 @@
-// render-build.js - ES module version
+// render-build.js
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -12,14 +12,62 @@ if (!fs.existsSync('dist')) {
   fs.mkdirSync('dist');
 }
 
-// Build the server-side code
+// Build the server-side code with explicit external packages
 console.log('Building server code...');
 try {
-  execSync('npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { stdio: 'inherit' });
+  execSync('npx esbuild server/index.ts --platform=node --external:vite --external:@vitejs/plugin-react --external:@replit/vite-plugin-* --bundle --format=esm --outdir=dist', { stdio: 'inherit' });
 } catch (error) {
   console.error('Server build failed:', error);
   process.exit(1);
 }
+
+// Create a production-only server entry point
+console.log('Creating production server entry...');
+fs.writeFileSync('dist/prod-server.js', `
+// Production server entry point
+// This file avoids importing any development dependencies
+import { createServer } from 'http';
+import express from 'express';
+import session from 'express-session';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Import your actual server code without the Vite parts
+import { setupAuth } from './index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const app = express();
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json());
+
+// Set up authentication
+setupAuth(app);
+
+// Serve static files
+const clientPath = join(__dirname, 'client');
+app.use(express.static(clientPath));
+
+// Any additional routes from your server code
+// ...
+
+// Catch-all route for client-side routing
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(join(clientPath, 'index.html'));
+  } else {
+    res.status(404).send('API endpoint not found');
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+createServer(app).listen(PORT, () => {
+  console.log(\`Server running on port \${PORT}\`);
+});
+`);
 
 // Copy package.json to dist (needed for production start)
 console.log('Copying package.json to dist...');
@@ -29,7 +77,18 @@ const prodPkg = {
   name: pkg.name,
   version: pkg.version,
   type: pkg.type,
-  dependencies: pkg.dependencies,
+  dependencies: {
+    express: pkg.dependencies.express,
+    'express-session': pkg.dependencies['express-session'],
+    'connect-pg-simple': pkg.dependencies['connect-pg-simple'],
+    'drizzle-orm': pkg.dependencies['drizzle-orm'],
+    '@neondatabase/serverless': pkg.dependencies['@neondatabase/serverless'],
+    passport: pkg.dependencies.passport,
+    'passport-local': pkg.dependencies['passport-local'],
+    cors: pkg.dependencies.cors || "^2.8.5",
+    ws: pkg.dependencies.ws
+    // Add other required production dependencies
+  },
   engines: {
     node: ">=18.0.0"
   }
