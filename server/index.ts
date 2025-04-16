@@ -1,6 +1,7 @@
 import './env';
 import express, { type Request, Response, NextFunction } from "express";
 import cors from 'cors';
+import path from 'path';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -13,6 +14,17 @@ app.use(cors({
   credentials: true
 }));
 
+// Near your other middleware
+app.use(express.static(path.join(process.cwd(), 'dist/client')));
+// Add a catch-all route for the client SPA at the end of your routes
+app.get('*', (req, res) => {
+  // Only catch non-API routes
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(process.cwd(), 'dist/client/index.html'));
+  } else {
+    res.status(404).send('API endpoint not found');
+  }
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
