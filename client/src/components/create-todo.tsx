@@ -174,13 +174,13 @@ export default function CreateTodo() {
 
           <Button
             type="submit"
-            className="w-full"
+            className="mx-auto block px-28"
             disabled={createTodoMutation.isPending}
           >
             {createTodoMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Create Todo
+            Create Task
           </Button>
         </form>
       </CardContent>

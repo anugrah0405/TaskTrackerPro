@@ -84,6 +84,10 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      fontFamily: {
+        orbitron: ['Orbitron', 'sans-serif'],
+        audiowide: ['"Audiowide"', 'cursive'],
+      },
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],

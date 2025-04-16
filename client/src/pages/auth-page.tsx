@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
@@ -13,11 +14,13 @@ import { Loader2 } from "lucide-react";
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
 
-  const loginForm = useForm({
+  type AuthFormData = z.infer<typeof insertUserSchema>;
+
+  const loginForm = useForm<AuthFormData>({
     resolver: zodResolver(insertUserSchema),
   });
 
-  const registerForm = useForm({
+  const registerForm = useForm<AuthFormData>({
     resolver: zodResolver(insertUserSchema),
   });
 
@@ -31,7 +34,7 @@ export default function AuthPage() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">
-              Welcome to TodoApp
+              Welcome to TaskTrackerApp
             </CardTitle>
           </CardHeader>
           <CardContent>
