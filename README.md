@@ -1,8 +1,10 @@
-# Task Tracker Pro
+# TaskTrackerPro
 
 A modern, feature-rich task management application with robust user authentication and database persistence.
 
-![Todo List App Screenshot](https://example.com/screenshot.png)
+## Live URL
+
+- [Open the deployed app on Render](https://dashboard.render.com)
 
 ## Features
 
@@ -12,9 +14,10 @@ A modern, feature-rich task management application with robust user authenticati
 - **Labels**: Tag tasks with multiple labels for better organization
 - **Advanced Filtering**: Filter by completion status, category, and labels
 - **Flexible Sorting**: Sort tasks by deadline, title, or creation date
-- **Deadlines**: Set dates and times for task completion with clear time format indicators
+- **Deadlines**: Set dates and times with a custom DateTimePicker (dark-mode friendly)
 - **Data Persistence**: All tasks stored in PostgreSQL database for reliable access
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Dark/Light Mode**: App-wide theme toggle on the home page; the auth page stays light
 
 ## Tech Stack
 
@@ -31,7 +34,7 @@ A modern, feature-rich task management application with robust user authenticati
 Before you begin, make sure you have the following installed:
 
 1. **Node.js** (version 18.x or higher)
-2. **PostgreSQL** (local installation or cloud service like Neon)
+2. **PostgreSQL** (cloud service like Neon free tier recommended)
 3. **Git**
 
 ## Installation
@@ -39,7 +42,7 @@ Before you begin, make sure you have the following installed:
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd todo-list-app
+   cd TaskTrackerPro
    ```
 
 2. Install dependencies:
@@ -50,7 +53,7 @@ Before you begin, make sure you have the following installed:
 3. Set up environment variables:
    Create a `.env` file in the project root with the following variables:
    ```
-   DATABASE_URL=postgresql://username:password@localhost:5432/todolist
+   DATABASE_URL=postgresql://username:password@host:5432/database
    SESSION_SECRET=your_session_secret_here
    ```
    Replace the `DATABASE_URL` with your PostgreSQL connection string. For `SESSION_SECRET`, use a secure random string.
@@ -67,32 +70,41 @@ Start the development server:
 npm run dev
 ```
 
-This will start both the Express backend and React frontend. Visit `http://localhost:5000` in your browser to access the application.
+This starts both the Express backend and React frontend. Visit `http://localhost:5000`.
 
 ## Project Structure
 
 ```
-├── client/               # Frontend React application
-│   ├── src/
-│   │   ├── components/   # UI components
-│   │   ├── hooks/        # Custom React hooks
-│   │   ├── lib/          # Utility functions
-│   │   ├── pages/        # Page components
-│   │   └── App.tsx       # Main application component
+├── client/                      # Frontend React application
+│   ├── index.html
+│   └── src/
+│       ├── App.tsx             # Main application component
+│       ├── main.tsx            # Frontend entry
+│       ├── index.css           # Tailwind/theme tokens
+│       ├── components/         # UI + feature components
+│       │   └── ui/             # Shadcn UI primitives
+│       ├── pages/              # Route components
+│       ├── hooks/              # Custom React hooks
+│       └── lib/                # Utilities (queryClient, etc.)
 │
-├── server/               # Backend Express application
-│   ├── auth.ts           # Authentication logic
-│   ├── db.ts             # Database connection
-|   ├── env.ts            # Dotenv configuration
-│   ├── index.ts          # Server entry point
-│   ├── routes.ts         # API routes
-│   └── storage.ts        # Database operations
+├── server/                      # Backend Express application
+│   ├── auth.ts                  # Authentication logic
+│   ├── db.ts                    # Database connection
+│   ├── env.ts                   # Dotenv configuration
+│   ├── index.ts                 # Server entry point
+│   ├── routes.ts                # API routes
+│   ├── storage.ts               # Database operations
+│   └── vite.ts                  # Dev middleware / static serving
 │
-├── shared/               # Shared code between client and server
-│   └── schema.ts         # Database schema and types
+├── shared/                      # Shared code between client and server
+│   └── schema.ts                # DB schema and types
 │
-├── drizzle.config.ts     # Drizzle ORM configuration
-└── package.json          # Project dependencies
+├── drizzle.config.ts            # Drizzle ORM configuration
+├── tailwind.config.ts           # Tailwind config (class-based dark mode)
+├── postcss.config.js            # PostCSS config
+├── vite.config.ts               # Vite config (client root, dist/public)
+├── tsconfig.json                # TypeScript config
+└── package.json                 # Project dependencies and scripts
 ```
 
 ## Database Schema
@@ -101,48 +113,37 @@ This will start both the Express backend and React frontend. Visit `http://local
 - **categories**: Task categories with color coding
 - **todos**: Task data including title, completion status, deadline, labels, etc.
 
-## Deployment
+## Deployment (Render – Single Service)
 
-### Option 2: Deploy to Heroku
+This project is configured to build the client and serve it with Express alongside the API on the same port.
 
-1. Create a Heroku account and install the Heroku CLI
-2. Log in to Heroku:
-   ```bash
-   heroku login
-   ```
+Render setup
+1. Push your repo to GitHub.
+2. In Render, create a New Web Service from this repo.
+3. Environment: Node.
+4. Build command: `npm run build`
+5. Start command: `npm start`
+6. Environment variables:
+   - `DATABASE_URL` = your Neon Postgres connection string
+   - `SESSION_SECRET` = a long random string
+7. Create the service. Render provides `PORT`; the server binds to it automatically.
 
-3. Create a new Heroku app:
-   ```bash
-   heroku create your-todo-app-name
-   ```
+Database schema
+- After the first deploy, run the schema push once (via Render shell or locally with the same DATABASE_URL):
+```bash
+npm run db:push
+```
 
-4. Add a PostgreSQL database:
-   ```bash
-   heroku addons:create heroku-postgresql:hobby-dev
-   ```
-
-5. Set the session secret:
-   ```bash
-   heroku config:set SESSION_SECRET=your_session_secret_here
-   ```
-
-6. Deploy your code:
-   ```bash
-   git push heroku main
-   ```
-
-7. Run database migrations:
-   ```bash
-   heroku run npm run db:push
-   ```
+Notes
+- Client is built to `dist/public` and served by Express in production.
+- Dark mode is applied globally on non-auth routes so dialogs/popovers follow the theme. The auth page stays light.
 
 ## Local Production Build
 
 To create a production build for local deployment:
 
-1. Build the frontend:
+1. Build the app:
    ```bash
-   cd client
    npm run build
    ```
 
