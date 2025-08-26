@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import DateTimePicker from "@/components/date-time-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -172,13 +173,11 @@ export default function EditTodo({ todo, onClose }: EditTodoProps) {
           </p>
           <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded">HH:MM format</span>
         </div>
-        <Input
-          id="deadline"
-          type="datetime-local"
-          step="60"
-          {...form.register("deadline")}
-          className="px-3 py-2"
+        <DateTimePicker
+          value={form.getValues("deadline")}
+          onChange={(val) => form.setValue("deadline", val)}
           placeholder="YYYY-MM-DD HH:MM"
+          disabled={editTodoMutation.isPending}
         />
       </div>
 
