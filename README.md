@@ -4,7 +4,7 @@ A modern, feature-rich task management application with robust user authenticati
 
 ## Live URL
 
-- [Open the deployed app on Render](https://dashboard.render.com)
+- [Open the deployed app](https://tasktrackerpro.onrender.com)
 
 ## Features
 
